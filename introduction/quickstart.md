@@ -17,26 +17,58 @@
 
 思路：核心点遍历给定字符串字符，判断以当前字符开头字符串是否等于目标字符串
 
-```go
-func strStr(haystack string, needle string) int {
-    if len(needle) == 0 {
+```python
+def strStr(self, haystack: str, needle: str) -> int:
+    # 1.使用python的find方法
+    # return haystack.find(needle)
+    # 2.子串逐一比较,O((m-n)*n)
+    # m,n = len(haystack),len(needle)
+    # for i in range(m-n+1):
+    #     if haystack[i:i+n]==needle:
+    #         return i
+    # return -1
+    # 3.利用双指针回溯,空子串返回0
+    # m,n = len(haystack),len(needle)
+    # if n==0:
+    #     return 0
+    # pm,pn = 0,0
+    # while pm<m-n+1:
+    #     while pm<m-n+1 and haystack[pm]!=needle[0]:
+    #         pm+=1
+    #     while pm+pn<m and pn<n and haystack[pm+pn]==needle[pn]:
+    #         pn+=1
+    #     if pn==n:
+    #         return pm
+    #     else:
+    #         pm+=1
+    #         pn=0
+    # return -1
+    # 4. Rabin Karp:哈希码对比+滚动哈希
+    m, n = len(haystack), len(needle)
+    if n == 0:
         return 0
-    }
-    var i, j int
-    // i不需要到len-1
-    for i = 0; i < len(haystack)-len(needle)+1; i++ {
-        for j = 0; j < len(needle); j++ {
-            if haystack[i+j] != needle[j] {
-                break
-            }
-        }
-        // 判断字符串长度是否相等
-        if len(needle) == j {
+    if n > m:
+        return -1
+    # 计算哈希码
+    modulus = 2 ** 31  # 设置python整数的数值上限来避免溢出
+    # hash_code = sum(字母对应的数字*26^(n-1))
+    hash_code_m, hash_code_n = 0, 0
+    for i in range(n):
+        hash_code_m = (hash_code_m * 26 + (ord(haystack[i]) - ord('a'))) % modulus
+        hash_code_n = (hash_code_n * 26 + (ord(needle[i]) - ord('a'))) % modulus
+    if hash_code_m == hash_code_n:
+        return 0
+    # print(hash_code_m,hash_code_n)
+    #
+    t = pow(26, n - 1) % modulus
+    for i in range(1, m - n + 1):
+        # 滚动更新哈希值
+        t1, t2 = ord(haystack[i - 1]) - ord('a'), ord(haystack[i + n - 1]) - ord('a')
+        hash_code_m = ((hash_code_m - t1 * t) * 26 + t2) % modulus
+        # print(hash_code_m)
+        if hash_code_m == hash_code_n:
             return i
-        }
-    }
     return -1
-}
 ```
 
 需要注意点
@@ -68,32 +100,58 @@ func backtrack(选择列表,路径):
 
 答案代码
 
-```go
-func subsets(nums []int) [][]int {
-    // 保存最终结果
-    result := make([][]int, 0)
-    // 保存中间结果
-    list := make([]int, 0)
-    backtrack(nums, 0, list, &result)
-    return result
-}
+```python
+def subsets(self, nums):
+    def backtrack(first=0, curr=[]):
+        # if the combination is done
+        if len(curr) == k:
+            output.append(curr[:])
 
-// nums 给定的集合
-// pos 下次添加到集合中的元素位置索引
-// list 临时结果集合(每次需要复制保存)
-// result 最终结果
-func backtrack(nums []int, pos int, list []int, result *[][]int) {
-    // 把临时结果复制出来保存到最终结果
-    ans := make([]int, len(list))
-    copy(ans, list)
-    *result = append(*result, ans)
-    // 选择、处理结果、再撤销选择
-    for i := pos; i < len(nums); i++ {
-        list = append(list, nums[i])
-        backtrack(nums, i+1, list, result)
-        list = list[0 : len(list)-1]
-    }
-}
+            print(curr)
+        for i in range(first, n):
+            # add nums[i] into the current combination
+            curr.append(nums[i])
+            # print(nums[first], nums[i], curr[:-1], '->', curr)
+            # use next integers to complete the combination
+            backtrack(i + 1, curr)
+            # backtrack
+            curr.pop()
+
+    output = []
+    n = len(nums)
+    for k in range(n + 1):
+        backtrack()
+    return output
+
+def subsets_2(self, nums):
+    result = [[]]
+    for idx in range(len(nums)):
+        # 索引为i时,可生成长度1-i的子串长度
+        new_res = []
+        for re_ in result:
+            new_res += [re_ + [nums[idx]]]
+        result += new_res
+    return result
+
+def subsets_1(self, nums):
+    subset = {0: [[]]}
+    subset[len(nums)] = [nums]
+    # 遍历可能的子集长度
+    for i in range(1, len(nums)):
+        subset[i] = []
+        # 遍历长度小于1的子集,如不重复则增加元素
+        for set_ in subset[i - 1]:
+            for j in nums:
+                if j not in set_ and sorted([j] + set_) not in subset[i]:
+                    subset[i] += [sorted([j] + set_)]
+
+    print(subset)
+    #
+    result = []
+    for i in range(len(nums)):
+        result += subset[i]
+    #
+    return result
 ```
 
 说明：后面会深入讲解几个典型的回溯算法问题，如果当前不太了解可以暂时先跳过
