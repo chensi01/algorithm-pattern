@@ -18,67 +18,32 @@
 
 思路：用两个栈实现，一个最小栈始终保证最小值在顶部
 
-```go
-type MinStack struct {
-    min []int
-    stack []int
-}
+```python
+class MinStack:
+    def __init__(self):
+        """
+        initialize your data structure here.
+        """
+        self.stack = []
+        #设置辅助栈,存储当前栈的最小值
+        self.min_stack = []
 
+    def push(self, x: int) -> None:
+        self.stack.append(x)
+        if len(self.min_stack) == 0:
+            self.min_stack.append(x)
+        else:
+            self.min_stack.append(min(self.min_stack[-1],x))
 
-/** initialize your data structure here. */
-func Constructor() MinStack {
-    return MinStack{
-        min: make([]int, 0),
-        stack: make([]int, 0),
-    }
-}
+    def pop(self) -> None:
+        self.stack = self.stack[:-1]
+        self.min_stack = self.min_stack[:-1]
 
+    def top(self) -> int:
+        return self.stack[-1]
 
-func (this *MinStack) Push(x int)  {
-    min := this.GetMin()
-    if x < min {
-        this.min = append(this.min, x)
-    } else {
-        this.min = append(this.min, min)
-    }
-    this.stack = append(this.stack, x)
-}
-
-
-func (this *MinStack) Pop()  {
-    if len(this.stack) == 0 {
-        return
-    }
-    this.stack = this.stack[:len(this.stack)-1]
-    this.min = this.min[:len(this.min)-1]
-}
-
-
-func (this *MinStack) Top() int {
-    if len(this.stack) == 0 {
-        return 0
-    }
-    return this.stack[len(this.stack)-1]
-}
-
-
-func (this *MinStack) GetMin() int {
-    if len(this.min) == 0 {
-        return 1 << 31
-    }
-    min := this.min[len(this.min)-1]
-    return min
-}
-
-
-/**
- * Your MinStack object will be instantiated and called as such:
- * obj := Constructor();
- * obj.Push(x);
- * obj.Pop();
- * param_3 := obj.Top();
- * param_4 := obj.GetMin();
- */
+    def getMin(self) -> int:
+        return self.min_stack[-1]
 ```
 
 [evaluate-reverse-polish-notation](https://leetcode-cn.com/problems/evaluate-reverse-polish-notation/)
@@ -88,42 +53,56 @@ func (this *MinStack) GetMin() int {
 
 思路：通过栈保存原来的元素，遇到表达式弹出运算，再推入结果，重复这个过程
 
-```go
-func evalRPN(tokens []string) int {
-    if len(tokens)==0{
-        return 0
-    }
-    stack:=make([]int,0)
-    for i:=0;i<len(tokens);i++{
-        switch tokens[i]{
-        case "+","-","*","/":
-            if len(stack)<2{
-                return -1
-            }
-            // 注意：a为除数，b为被除数
-            b:=stack[len(stack)-1]
-            a:=stack[len(stack)-2]
-            stack=stack[:len(stack)-2]
-            var result int
-            switch tokens[i]{
-            case "+":
-                result=a+b
-            case "-":
-                result=a-b
-            case "*":
-                result=a*b
-            case "/":
-                result=a/b
-            }
-            stack=append(stack,result)
-        default:
-            // 转为数字
-            val,_:=strconv.Atoi(tokens[i])
-            stack=append(stack,val)
-        }
-    }
-    return stack[0]
-}
+```python
+def evalRPN(self, tokens) -> int:
+    operators = '+-*/'
+    #通过栈保存原来的元素
+    tokens_stack = []
+    for token in tokens:
+        #遇到表达式弹出运算，再推入结果
+        if token in operators:
+            left,right = tokens_stack[-2:]
+            #用eval()计算结果
+            tokens_stack = tokens_stack[:-2]+[str(int(eval(left+token+right)))]
+        else:
+            tokens_stack.append(token)
+    return int(tokens_stack[0])
+
+
+# #从后往前遍历,会超时
+# def evalRPN_(self, tokens: List[str]) -> int:
+#     if len(tokens)==1:
+#         return int(tokens[0])
+#     operator_list = ['+','-','*','/']
+#     #op:先提取运算符
+#     op = tokens.pop()
+#     #right:根据运算符和数字的个数找到right子串,递归计算结果
+#     if tokens[-1] not in operator_list:
+#         right = int(tokens.pop())
+#     else:
+#         right_op_nums = 0
+#         right_dig_nums = 0
+#         right_tokens = []
+#         while len(right_tokens)==0 or (right_dig_nums+right_op_nums>0):
+#             token = tokens.pop()
+#             right_tokens = [token]+right_tokens
+#             if token in operator_list:
+#                 right_op_nums+=1
+#             else:
+#                 right_dig_nums+=1
+#             if right_dig_nums==2:
+#                 if right_op_nums==1:
+#                     break
+#                 right_op_nums-=1
+#                 right_dig_nums-=1
+#         right = self.evalRPN(right_tokens)
+#     #left:剩下的是left子串,递归计算结果
+#     left = self.evalRPN(tokens)
+#     #归并结果
+#     if op=='+':return left+right
+#     elif op=='-':return left-right
+#     elif op=='*':return left*right
+#     elif op=='/':return int(str(left/right).split('.')[0])
 ```
 
 [decode-string](https://leetcode-cn.com/problems/decode-string/)
@@ -135,126 +114,132 @@ func evalRPN(tokens []string) int {
 
 思路：通过栈辅助进行操作
 
-```go
-func decodeString(s string) string {
-	if len(s) == 0 {
-		return ""
-	}
-	stack := make([]byte, 0)
-	for i := 0; i < len(s); i++ {
-		switch s[i] {
-		case ']':
-			temp := make([]byte, 0)
-			for len(stack) != 0 && stack[len(stack)-1] != '[' {
-				v := stack[len(stack)-1]
-				stack = stack[:len(stack)-1]
-				temp = append(temp, v)
-			}
-			// pop '['
-			stack = stack[:len(stack)-1]
-			// pop num
-			idx := 1
-			for len(stack) >= idx && stack[len(stack)-idx] >= '0' && stack[len(stack)-idx] <= '9' {
-				idx++
-			}
-            // 注意索引边界
-			num := stack[len(stack)-idx+1:]
-			stack = stack[:len(stack)-idx+1]
-			count, _ := strconv.Atoi(string(num))
-			for j := 0; j < count; j++ {
-                // 把字符正向放回到栈里面
-				for j := len(temp) - 1; j >= 0; j-- {
-					stack = append(stack, temp[j])
-				}
-			}
-		default:
-			stack = append(stack, s[i])
-
-		}
-	}
-	return string(stack)
-}
+```python
+def decodeString(self, s: str) -> str:
+    res_stack = []
+    for _s in s:
+        if _s != ']':
+            res_stack.append(_s)
+            continue
+        encoded_string = ''
+        while res_stack[-1].isalpha():
+            encoded_string=res_stack.pop()+encoded_string
+        res_stack.pop()
+        multiple = ''
+        while res_stack and res_stack[-1].isdigit():
+            multiple=res_stack.pop()+multiple
+        # print(encoded_string)
+        res_stack+=(encoded_string*int(multiple))
+    return ''.join(res_stack)
 ```
 
 利用栈进行 DFS 递归搜索模板
 
-```go
-boolean DFS(int root, int target) {
-    Set<Node> visited;
-    Stack<Node> s;
-    add root to s;
-    while (s is not empty) {
-        Node cur = the top element in s;
-        return true if cur is target;
-        for (Node next : the neighbors of cur) {
-            if (next is not in visited) {
-                add next to s;
-                add next to visited;
-            }
-        }
-        remove cur from s;
-    }
-    return false;
-}
+```python
+def decodeString(self, s: str) -> str:
+    #递归法:将 [ 和 ] 分别作为递归的开启与终止条件：
+    def dfs(s,i):
+        res,multi = "",0
+        while i<len(s):
+            #解码重复次数
+            if s[i].isdigit():
+                multi = multi*10 + int(s[i])
+            #开启一层递归
+            elif s[i]=='[':
+                #解码方括号中的encoded_string
+                i,dencoded_string = dfs(s,i+1)
+                #重复次数
+                res+=(multi*dencoded_string)
+                #
+                multi=0
+            #结束递归
+            elif s[i]==']':
+                #返回上一层递归的索引位置
+                return i,res
+            elif s[i].isalpha():
+                res+=s[i]
+            i+=1
+        return res
+    return dfs(s,0)
 ```
 
 [binary-tree-inorder-traversal](https://leetcode-cn.com/problems/binary-tree-inorder-traversal/)
 
 > 给定一个二叉树，返回它的*中序*遍历。
 
-```go
-// 思路：通过stack 保存已经访问的元素，用于原路返回
-func inorderTraversal(root *TreeNode) []int {
-    result := make([]int, 0)
-    if root == nil {
-        return result
-    }
-    stack := make([]*TreeNode, 0)
-    for len(stack) > 0 || root != nil {
-        for root != nil {
-            stack = append(stack, root)
-            root = root.Left // 一直向左
-        }
-        // 弹出
-        val := stack[len(stack)-1]
-        stack = stack[:len(stack)-1]
-        result = append(result, val.Val)
-        root = val.Right
-    }
-    return result
-}
+```python
+# Definition for a binary tree node.
+class TreeNode:
+    def __init__(self, x):
+        self.val = x
+        self.left = None
+        self.right = None
+
+class Solution:
+    def inorderTraversal(self, root: TreeNode):
+        if root is None:
+            return []
+        res = []
+        stack = []
+        cur_node = root
+        while len(stack) or cur_node:
+            #左子树
+            while cur_node:
+                stack.append(cur_node)
+                cur_node = cur_node.left
+            #访问根节点
+            cur_node = stack.pop()
+            res.append(cur_node.val)
+            #右子树
+            cur_node = cur_node.right
+        return res
 ```
 
 [clone-graph](https://leetcode-cn.com/problems/clone-graph/)
 
 > 给你无向连通图中一个节点的引用，请你返回该图的深拷贝（克隆）。
 
-```go
-func cloneGraph(node *Node) *Node {
-    visited:=make(map[*Node]*Node)
-    return clone(node,visited)
-}
-// 1 2
-// 4 3
-// 递归克隆，传入已经访问过的元素作为过滤条件
-func clone(node *Node,visited map[*Node]*Node)*Node{
-    if node==nil{
-        return nil
-    }
-    // 已经访问过直接返回
-    if v,ok:=visited[node];ok{
-        return v
-    }
-    newNode:=&Node{
-        Val:node.Val,
-        Neighbors:make([]*Node,len(node.Neighbors)),
-    }
-    visited[node]=newNode
-    for i:=0;i<len(node.Neighbors);i++{
-        newNode.Neighbors[i]=clone(node.Neighbors[i],visited)
-    }
-    return newNode
-}
+```python
+# Definition for a Node.
+class Node:
+    def __init__(self, val = 0, neighbors = []):
+        self.val = val
+        self.neighbors = neighbors
+
+class Solution:
+    def __init__(self):
+        # 使用一个 HashMap 存储所有已被访问和复制的节点
+        self.clonedNodes = {}
+    # 连通图:图中任意两点都是连通的
+    def cloneGraph_bfs(self, node: 'Node') -> 'Node':
+        if node is None:
+            return None
+        cloned = {}
+        from collections import deque
+        #使用队列存放未分配邻居结点的克隆节点
+        queue = deque([node])
+        cloned[node] = Node(node.val,[])
+        #----------------------------
+        while queue:
+            cur_n = queue.popleft()
+            for neighbor in cur_n.neighbors:
+                if neighbor not in cloned:
+                    cloned[neighbor]=Node(neighbor.val,[])
+                    queue.append(neighbor)
+                cloned[cur_n].neighbors+=[cloned[neighbor]]
+        return cloned[node]
+
+
+
+    def cloneGraph_dfs(self, node: 'Node') -> 'Node':
+        if node is None:
+            return None
+        if node not in self.clonedNodes: 
+            # 进入递归前，先创建克隆节点并保存在 HashMap , 避免死循环。
+            self.clonedNodes[node] = Node(node.val)
+            self.clonedNodes[node].neighbors=[self.cloneGraph(neighbor) for neighbor in node.neighbors]
+        return self.clonedNodes[node]
+
 ```
 
 [number-of-islands](https://leetcode-cn.com/problems/number-of-islands/)
@@ -263,30 +248,87 @@ func clone(node *Node,visited map[*Node]*Node)*Node{
 
 思路：通过深度搜索遍历可能性（注意标记已访问元素）
 
-```go
+```python
+class Solution:
+    def numIslands(self, grid) -> int:
+        #并查集数据结构
+        class UnionFind:
+            def __init__(self, grid):
+                m, n = len(grid), len(grid[0])
+                #联通分量的个数
+                self.count = 0
+                #self.parent代表邻接结点
+                self.parent = [-1] * (m * n)
+                for i in range(m):
+                    for j in range(n):
+                        if grid[i][j] == "1":
+                            # 初始化邻接结点为自己
+                            self.parent[i * n + j] = i * n + j
+                            self.count += 1
+            
+            def find(self, i):
+                #连通分量的id是其中某个结点的id
+                # 查找结点属于哪个集合:查找连通分量的id,依次遍历邻接结点直到连通分量的id等于结点id
+                if self.parent[i] != i:
+                    self.parent[i] = self.find(self.parent[i])
+                return self.parent[i]
+            
+            def union(self, x, y):
+                rootx = self.find(x)
+                rooty = self.find(y)
+                if rootx != rooty:
+                    self.parent[rooty] = rootx
+                    self.count -= 1
+            
+            def getCount(self):
+                return self.count
+        #---------------------------------
+        if len(grid)==0 or len(grid[0])==0:
+            return 0
+        row,col = len(grid),len(grid[0])
+        uf = UnionFind(grid)
+        for i in range(row):
+            for j in range(col):
+                if grid[i][j] != '1':
+                    continue
+                for r,c in [[i+1,j],[i,j+1],[i-1,j],[i,j-1]]:
+                    if r in range(row) and c in range(col) and grid[r][c]=='1':
+                        uf.union(r*col+c,i*col+j)
+        return uf.getCount()
 
-func numIslands(grid [][]byte) int {
-    var count int
-    for i:=0;i<len(grid);i++{
-        for j:=0;j<len(grid[i]);j++{
-            if grid[i][j]=='1' && dfs(grid,i,j)>=1{
-                count++
-            }
-        }
-    }
-    return count
-}
-func dfs(grid [][]byte,i,j int)int{
-    if i<0||i>=len(grid)||j<0||j>=len(grid[0]){
-        return 0
-    }
-    if grid[i][j]=='1'{
-        // 标记已经访问过(每一个点只需要访问一次)
-        grid[i][j]=0
-        return dfs(grid,i-1,j)+dfs(grid,i,j-1)+dfs(grid,i+1,j)+dfs(grid,i,j+1)+1
-    }
-    return 0
-}
+
+    def numIslands_search(self, grid) -> int:
+        # 将二维网格看成无向图.扫描网格,利用深/广度优先搜索将所有1周围的1置为0。
+        # 岛屿个数为深/广度优先搜索的个数
+        def _dfs(grid,i,j):
+            grid[i][j] = '0'
+            row,col = len(grid),len(grid[0])
+            for r,c in [[i+1,j],[i,j+1],[i-1,j],[i,j-1]]:
+                if r in range(row) and c in range(col) and grid[r][c]=='1':
+                    _dfs(grid,r,c)
+        def _bfs(grid,i,j):
+            grid[i][j] = '0'
+            row,col = len(grid),len(grid[0])
+            from collections import deque
+            queue = deque([[i,j]])
+            while queue:
+                i,j = queue.popleft()
+                for r,c in [[i+1,j],[i,j+1],[i-1,j],[i,j-1]]:
+                    if r in range(row) and c in range(col) and grid[r][c]=='1':
+                        queue.append([r,c])
+                        grid[r][c] = '0'
+        #--------------------------------
+        if len(grid)==0 or len(grid[0])==0:
+            return 0
+        row,col = len(grid),len(grid[0])
+        res = 0
+        for i in range(row):
+            for j in range(col):
+                if grid[i][j] == '1':
+                    res+=1
+                    # _dfs(grid,i,j)
+                    _bfs(grid,i,j)
+        return res
 ```
 
 [largest-rectangle-in-histogram](https://leetcode-cn.com/problems/largest-rectangle-in-histogram/)
@@ -302,44 +344,57 @@ func dfs(grid [][]byte,i,j int)int{
 
 ![image.png](https://img.fuiboom.com/img/stack_rain2.png)
 
-```go
-func largestRectangleArea(heights []int) int {
-	if len(heights) == 0 {
-		return 0
-	}
-	stack := make([]int, 0)
-	max := 0
-	for i := 0; i <= len(heights); i++ {
-		var cur int
-		if i == len(heights) {
-			cur = 0
-		} else {
-			cur = heights[i]
-		}
-        // 当前高度小于栈，则将栈内元素都弹出计算面积
-		for len(stack) != 0 && cur <= heights[stack[len(stack)-1]] {
-			pop := stack[len(stack)-1]
-			stack = stack[:len(stack)-1]
-			h := heights[pop]
-            // 计算宽度
-			w := i
-			if len(stack) != 0 {
-				peek := stack[len(stack)-1]
-				w = i - peek - 1
-			}
-			max = Max(max, h*w)
-		}
-        // 记录索引即可获取对应元素
-		stack = append(stack, i)
-	}
-	return max
-}
-func Max(a, b int) int {
-	if a > b {
-		return a
-	}
-	return b
-}
+```python
+class Solution:
+    def largestRectangleArea(self, heights) -> int:#-----------------------
+        #方法1:单调栈
+        #左->右遍历并维护一个单调递增栈,栈内元素下面的元素就是左侧第一个小于它的元素
+        n = len(heights)
+        mono_stack,left = [],[]
+        for left_i in range(n):
+            #若大于当前高度，则出栈以维护栈的单调性
+            while len(mono_stack) and mono_stack[-1][0]>=heights[left_i]:
+                mono_stack.pop()
+            left.append(mono_stack[-1][1] if len(mono_stack) else -1)
+            mono_stack.append([heights[left_i],left_i])
+        #右->左遍历
+        mono_stack,right = [],[]
+        for right_i in range(n-1,-1,-1):
+            #若大于当前高度，则出栈以维护栈的单调性
+            while len(mono_stack) and mono_stack[-1][0]>=heights[right_i]:
+                mono_stack.pop()
+            right.append(mono_stack[-1][1] if len(mono_stack) else n)
+            mono_stack.append([heights[right_i],right_i])
+        right = right[::-1]
+        #根据每个height的左右边界结算面积
+        res = 0
+        for i in range(n):
+            res = max(res,heights[i]*(right[i]-left[i]-1))
+        return res
+        #-----------------------
+        #方法2:枚举高
+        res = 0
+        n = len(heights)
+        for i in range(n):
+            height = heights[i]
+            start,end = i,i
+            while start>=0 and heights[start]>=height:
+                start-=1
+            while end<n and heights[end]>=height:
+                end+=1
+            _res = (end-start-1)*height
+            res = max(_res,res)
+        return res
+            
+        return res
+        #-----------------------
+        #方法3:枚举宽
+        res = 0
+        n = len(heights)
+        for start in range(n):
+            for end in range(start,n):
+                res = max(min(heights[start:end+1])*(end+1-start),res)
+        return res
 ```
 
 ## Queue 队列
@@ -350,110 +405,57 @@ func Max(a, b int) int {
 
 > 使用栈实现队列
 
-```go
-type MyQueue struct {
-    stack []int
-    back  []int
-}
+```python
+class MyQueue:
 
-/** Initialize your data structure here. */
-func Constructor() MyQueue {
-    return MyQueue{
-        stack: make([]int, 0),
-        back:  make([]int, 0),
-    }
-}
+    def __init__(self):
+        """Initialize your data structure here."""
+        self.queue = []
+        #辅助栈,进行peek和pop操作
+        self.helper = []
 
-// 1
-// 3
-// 5
+    def push(self, x: int) -> None:
+        """Push element x to the back of queue."""
+        self.queue.append(x)#使用相当于stack的pop
 
-/** Push element x to the back of queue. */
-func (this *MyQueue) Push(x int) {
-    for len(this.back) != 0 {
-        val := this.back[len(this.back)-1]
-        this.back = this.back[:len(this.back)-1]
-        this.stack = append(this.stack, val)
-    }
-    this.stack = append(this.stack, x)
-}
 
-/** Removes the element from in front of queue and returns that element. */
-func (this *MyQueue) Pop() int {
-    for len(this.stack) != 0 {
-        val := this.stack[len(this.stack)-1]
-        this.stack = this.stack[:len(this.stack)-1]
-        this.back = append(this.back, val)
-    }
-    if len(this.back) == 0 {
-        return 0
-    }
-    val := this.back[len(this.back)-1]
-    this.back = this.back[:len(this.back)-1]
-    return val
-}
+    def pop(self) -> int:
+        """Removes the element from in front of queue and returns that element."""
+        if len(self.helper)==0:
+            while len(self.queue):#判断栈是否为空
+                self.helper.append(self.queue.pop())#出/入栈
+        return self.helper.pop()
 
-/** Get the front element. */
-func (this *MyQueue) Peek() int {
-    for len(this.stack) != 0 {
-        val := this.stack[len(this.stack)-1]
-        this.stack = this.stack[:len(this.stack)-1]
-        this.back = append(this.back, val)
-    }
-    if len(this.back) == 0 {
-        return 0
-    }
-    val := this.back[len(this.back)-1]
-    return val
-}
 
-/** Returns whether the queue is empty. */
-func (this *MyQueue) Empty() bool {
-    return len(this.stack) == 0 && len(this.back) == 0
-}
+    def peek(self) -> int:
+        """Get the front element."""
+        if len(self.helper)==0:
+            while len(self.queue):#判断栈是否为空
+                self.helper.append(self.queue.pop())#出/入栈
+        return self.helper[-1]
 
-/**
- * Your MyQueue object will be instantiated and called as such:
- * obj := Constructor();
- * obj.Push(x);
- * param_2 := obj.Pop();
- * param_3 := obj.Peek();
- * param_4 := obj.Empty();
- */
+
+    def empty(self) -> bool:
+        """Returns whether the queue is empty."""
+        return len(self.queue)==0 and len(self.helper)==0
 ```
 
 二叉树层次遍历
 
-```go
-func levelOrder(root *TreeNode) [][]int {
-    // 通过上一层的长度确定下一层的元素
-    result := make([][]int, 0)
-    if root == nil {
-        return result
-    }
-    queue := make([]*TreeNode, 0)
-    queue = append(queue, root)
-    for len(queue) > 0 {
-        list := make([]int, 0)
-        // 为什么要取length？
-        // 记录当前层有多少元素（遍历当前层，再添加下一层）
-        l := len(queue)
-        for i := 0; i < l; i++ {
-            // 出队列
-            level := queue[0]
-            queue = queue[1:]
-            list = append(list, level.Val)
-            if level.Left != nil {
-                queue = append(queue, level.Left)
-            }
-            if level.Right != nil {
-                queue = append(queue, level.Right)
-            }
-        }
-        result = append(result, list)
-    }
-    return result
-}
+```python
+def levelorder(self, root):
+    if root is None:
+        return []
+    res = []
+    queue = [root]
+    while queue:
+        next_level_queue = []
+        for node in queue:
+            res += [node.val]
+            next_level_queue += [node.left] if node.left else []
+            next_level_queue += [node.right] if node.right else []
+        queue = next_level_queue
+    return res
 ```
 
 [01-matrix](https://leetcode-cn.com/problems/01-matrix/)
@@ -461,53 +463,50 @@ func levelOrder(root *TreeNode) [][]int {
 > 给定一个由 0 和 1 组成的矩阵，找出每个元素到最近的 0 的距离。
 > 两个相邻元素间的距离为 1
 
-```go
-// BFS 从0进队列，弹出之后计算上下左右的结果，将上下左右重新进队列进行二层操作
-// 0 0 0 0
-// 0 x 0 0
-// x x x 0
-// 0 x 0 0
-
-// 0 0 0 0
-// 0 1 0 0
-// 1 x 1 0
-// 0 1 0 0
-
-// 0 0 0 0
-// 0 1 0 0
-// 1 2 1 0
-// 0 1 0 0
-func updateMatrix(matrix [][]int) [][]int {
-    q:=make([][]int,0)
-    for i:=0;i<len(matrix);i++{
-        for j:=0;j<len(matrix[0]);j++{
-            if matrix[i][j]==0{
-                // 进队列
-                point:=[]int{i,j}
-                q=append(q,point)
-            }else{
-                matrix[i][j]=-1
-            }
-        }
-    }
-    directions:=[][]int{{0,1},{0,-1},{-1,0},{1,0}}
-    for len(q)!=0{
-        // 出队列
-        point:=q[0]
-        q=q[1:]
-        for _,v:=range directions{
-            x:=point[0]+v[0]
-            y:=point[1]+v[1]
-            if x>=0&&x<len(matrix)&&y>=0&&y<len(matrix[0])&&matrix[x][y]==-1{
-                matrix[x][y]=matrix[point[0]][point[1]]+1
-                // 将当前的元素进队列，进行一次BFS
-                q=append(q,[]int{x,y})
-            }
-        }
-    }
-    return matrix
-
-}
+```python
+class Solution:
+    def updateMatrix_bfs(self, matrix):
+        #思路:以0为中心,利用队列进行广度优先搜索
+        m,n = len(matrix),len(matrix[0])
+        distance = [[0]*n for _ in range(m)]
+        #找到所有0(1)标记已访问避免死循环(2)加入队列
+        visited = [(i,j) for i in range(m) for j in range(n) if matrix[i][j] == 0]
+        queue = collections.deque(visited)
+        visited = set(visited)#如果不是set而是list就会超时
+        #广度优先搜索
+        while queue:
+            i,j = queue.popleft()
+            for neigh_i,neigh_j in [[i-1,j],[i+1,j],[i,j-1],[i,j+1]]:
+                if neigh_i not in range(m) or neigh_j not in range(n) or (neigh_i,neigh_j) in visited:
+                    continue
+                distance[neigh_i][neigh_j] = distance[i][j]+1
+                queue.append((neigh_i,neigh_j))
+                visited.add((neigh_i,neigh_j))
+        return distance
+    def updateMatrix_dp(self, matrix):
+        m,n = len(matrix),len(matrix[0])
+        distance = [[m*n+1]*n for _ in range(m)]
+        #动态规划
+        for i in range(m):
+            for j in range(n):
+                if matrix[i][j]==0:
+                    distance[i][j] = 0
+        #向左上方
+        for i in range(m):
+            for j in range(n):
+                #动态转移方程
+                if i-1>=0:
+                    distance[i][j] = min([distance[i][j],distance[i-1][j]+1])
+                if j-1>=0:
+                    distance[i][j] = min([distance[i][j],distance[i][j-1]+1])
+        #向右下方
+        for i in range(m-1,-1,-1):
+            for j in range(n-1,-1,-1):
+                if i+1<m:
+                    distance[i][j] = min([distance[i][j],distance[i+1][j]+1])
+                if j+1<n:
+                    distance[i][j] = min([distance[i][j],distance[i][j+1]+1])
+        return distance
 ```
 
 ## 总结

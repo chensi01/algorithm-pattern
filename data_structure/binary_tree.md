@@ -155,14 +155,14 @@ def levelorder(self, root):
     if root is None:
         return []
     res = []
-    stack = [root]
-    while stack:
-        next_level_stack = []
-        for node in stack:
+    queue = [root]
+    while queue:
+        next_level_queue = []
+        for node in queue:
             res += [node.val]
-            next_level_stack += [node.left] if node.left else []
-            next_level_stack += [node.right] if node.right else []
-        stack = next_level_stack
+            next_level_queue += [node.left] if node.left else []
+            next_level_queue += [node.right] if node.right else []
+        queue = next_level_queue
     return res
 ```
 
@@ -408,15 +408,15 @@ def levelOrder(self, root):
     if root is None:
         return []
     res = []
-    stack = [root]
-    while stack:
-        cur_stack = []
+    queue = [root]
+    while queue:
+        cur_queue = []
         cur_res = []
-        for node in stack:
+        for node in queue:
             cur_res += [node.val]
-            cur_stack += [node.left] if node.left else []
-            cur_stack += [node.right] if node.right else []
-        stack = cur_stack
+            cur_queue += [node.left] if node.left else []
+            cur_queue += [node.right] if node.right else []
+        queue = cur_queue
         res += [cur_res]
     return res
 ```
