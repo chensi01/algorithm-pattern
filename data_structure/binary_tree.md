@@ -247,23 +247,27 @@ def mergeSort(self, nums):
 # 快速排序 - 分治法
 # (1)把数组中某个值设为基准值(2)把数组分为左右两段，左段小于基准值右段大于基准值，递归处理左右段，再合并
 # 类似分治法没有合并过程
-def quickSort(self, nums):
-    # in-place原地算法
-    # 只有divide没有conquer
-    if len(nums) < 2:
-        return nums
-    temp = nums[0]
-    start, end = 1, len(nums) - 1
-    while start < end:
-        while start < end and nums[start] <= temp:
-            start += 1
-        while start < end and nums[end] > temp:
-            end -= 1
-        # inplace 原地交换
-        nums[start], nums[end] = nums[end], nums[start]
-    left = self.quickSort(nums[1:start])
-    right = self.quickSort(nums[start:])
-    return left + [temp] + right
+def quickSort(self,nums):
+    # 快速排序:递归地把小/大于基准值的子数列排序
+    if len(nums)<2:
+        return
+    #divide
+    pivot = nums[0]
+    left,right = 0,len(nums)-1
+    while left<right:
+        while left<right and nums[right]>pivot:
+            right-=1
+        nums[left]=nums[right]
+        
+        while left<right and nums[left]<=pivot:
+            left+=1
+        nums[right] = nums[left]
+    nums[left] = pivot
+    
+    nums_left,nums_right = nums[:left],nums[left+1:]
+    self.mergeSort(nums_left)
+    self.mergeSort(nums_right)
+    nums[:left],nums[left+1:] = nums_left,nums_right
 ```
 
 注意点：
