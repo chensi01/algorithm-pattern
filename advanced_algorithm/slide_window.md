@@ -48,151 +48,96 @@ void slidingWindow(string s, string t) {
 
 > 给你一个字符串 S、一个字符串 T，请在字符串 S 里面找出：包含 T 所有字母的最小子串
 
-```go
-func minWindow(s string, t string) string {
-	// 保存滑动窗口字符集
-	win := make(map[byte]int)
-	// 保存需要的字符集
-	need := make(map[byte]int)
-	for i := 0; i < len(t); i++ {
-		need[t[i]]++
-	}
-	// 窗口
-	left := 0
-	right := 0
-	// match匹配次数
-	match := 0
-	start := 0
-	end := 0
-	min := math.MaxInt64
-	var c byte
-	for right < len(s) {
-		c = s[right]
-		right++
-		// 在需要的字符集里面，添加到窗口字符集里面
-		if need[c] != 0 {
-			win[c]++
-			// 如果当前字符的数量匹配需要的字符的数量，则match值+1
-			if win[c] == need[c] {
-				match++
-			}
-		}
+```python
+#只需包含所有字符,不需要保证顺序
+def minWindow(self, s: str, t: str) -> str:
+    left_i,right_i = 0,-1
+    #维护两个哈希表,分别记录子串中每个字符的(1)已出现次数(2)应出现次数
+    need = {}
+    have = {}
+    for c in t:
+        need[c] = need.get(c,0)+1
+        have[c] = 0
+    #count表示已满足子串t的字符个数
+    count = 0
+    res = s*2
+    while right_i<len(s)-1:
+        # 右移窗口
+        right_i+=1
+        # 数据更新
+        c = s[right_i]
+        if have.get(c,0)<need.get(c,0):
+            count+=1
+        if c in have:
+            have[c] += 1
+        # 收缩左侧窗口
+        while count == len(t):
+            if (right_i-left_i+1)<len(res):
+                res = s[left_i:right_i+1]
+            #收缩左侧窗口,更新收缩后结果
+            c = s[left_i]
+            left_i+=1
+            if c in need :
+                have[c] -=1
+                #当前解不满足,继续向右寻找
+                if have[c]<need[c]:
+                    count-=1
+    return res if res!=(s*2) else ""
 
-		// 当所有字符数量都匹配之后，开始缩紧窗口
-		for match == len(need) {
-			// 获取结果
-			if right-left < min {
-				min = right - left
-				start = left
-				end = right
-			}
-			c = s[left]
-			left++
-			// 左指针指向不在需要字符集则直接跳过
-			if need[c] != 0 {
-				// 左指针指向字符数量和需要的字符相等时，右移之后match值就不匹配则减一
-				// 因为win里面的字符数可能比较多，如有10个A，但需要的字符数量可能为3
-				// 所以在压死骆驼的最后一根稻草时，match才减一，这时候才跳出循环
-				if win[c] == need[c] {
-					match--
-				}
-				win[c]--
-			}
-		}
-	}
-	if min == math.MaxInt64 {
-		return ""
-	}
-	return s[start:end]
-}
 ```
 
 [permutation-in-string](https://leetcode-cn.com/problems/permutation-in-string/)
 
 > 给定两个字符串  **s1**  和  **s2**，写一个函数来判断  **s2**  是否包含  **s1 **的排列。
 
-```go
-func checkInclusion(s1 string, s2 string) bool {
-	win := make(map[byte]int)
-	need := make(map[byte]int)
-	for i := 0; i < len(s1); i++ {
-		need[s1[i]]++
-	}
-	left := 0
-	right := 0
-	match := 0
-	for right < len(s2) {
-		c := s2[right]
-		right++
-		if need[c] != 0 {
-			win[c]++
-			if win[c] == need[c] {
-				match++
-			}
-		}
-		// 当窗口长度大于字符串长度，缩紧窗口
-		for right-left >= len(s1) {
-			// 当窗口长度和字符串匹配，并且里面每个字符数量也匹配时，满足条件
-			if match == len(need) {
-				return true
-			}
-			d := s2[left]
-			left++
-			if need[d] != 0 {
-				if win[d] == need[d] {
-					match--
-				}
-				win[d]--
-			}
-		}
-	}
-	return false
-}
-
+```python
+def checkInclusion(self, s1: str, s2: str) -> bool:
+    #维护两个哈希表,分别记录子串中每个字符的(1)已出现次数(2)应出现次数
+    need,have = {},{}
+    for c in s1:
+        need[c] = need.get(c,0)+1
+    left_i,right_i = 0,-1
+    while right_i<len(s2)-1:
+        # 右移窗口,数据更新
+        right_i+=1
+        c = s2[right_i]
+        have[c] = have.get(c,0)+1
+        # 收缩左侧边界
+        while have.get(c,0)>need.get(c,0):
+            have[s2[left_i]]-=1
+            left_i+=1
+        if (right_i-left_i+1) == len(s1):
+            return True
+    return False
 ```
 
 [find-all-anagrams-in-a-string](https://leetcode-cn.com/problems/find-all-anagrams-in-a-string/)
 
 > 给定一个字符串  **s **和一个非空字符串  **p**，找到  **s **中所有是  **p **的字母异位词的子串，返回这些子串的起始索引。
 
-```go
-func findAnagrams(s string, p string) []int {
-    win := make(map[byte]int)
-	need := make(map[byte]int)
-	for i := 0; i < len(p); i++ {
-		need[p[i]]++
-	}
-	left := 0
-	right := 0
-	match := 0
-    ans:=make([]int,0)
-	for right < len(s) {
-		c := s[right]
-		right++
-		if need[c] != 0 {
-			win[c]++
-			if win[c] == need[c] {
-				match++
-			}
-		}
-		// 当窗口长度大于字符串长度，缩紧窗口
-		for right-left >= len(p) {
-			// 当窗口长度和字符串匹配，并且里面每个字符数量也匹配时，满足条件
-			if right-left == len(p)&& match == len(need) {
-				ans=append(ans,left)
-			}
-			d := s[left]
-			left++
-			if need[d] != 0 {
-				if win[d] == need[d] {
-					match--
-				}
-				win[d]--
-			}
-		}
-	}
-	return ans
-}
+```python
+def findAnagrams(self, s: str, p: str) -> List[int]:
+    #维护两个哈希表,分别记录子串中每个字符的(1)已出现次数(2)应出现次数
+    need,have = {},{}
+    for c in p:
+        need[c] = need.get(c,0)+1
+    left_i,right_i = 0,-1
+    res = []
+    while right_i<len(s)-1:
+        # 右移窗口,数据更新
+        right_i+=1
+        c = s[right_i]
+        have[c] = have.get(c,0)+1
+        # 收缩左侧边界
+        while have.get(c,0)>need.get(c,0):
+            have[s[left_i]]-=1
+            left_i+=1
+        if (right_i-left_i+1) == len(p):
+            res+=[left_i]
+            #
+            have[s[left_i]]-=1
+            left_i+=1
+    return res
 ```
 
 [longest-substring-without-repeating-characters](https://leetcode-cn.com/problems/longest-substring-without-repeating-characters/)
@@ -204,37 +149,20 @@ func findAnagrams(s string, p string) []int {
 > 输出: 3
 > 解释: 因为无重复字符的最长子串是 "abc"，所以其长度为 3。
 
-```go
-func lengthOfLongestSubstring(s string) int {
-    // 滑动窗口核心点：1、右指针右移 2、根据题意收缩窗口 3、左指针右移更新窗口 4、根据题意计算结果
-    if len(s)==0{
-        return 0
-    }
-    win:=make(map[byte]int)
-    left:=0
-    right:=0
-    ans:=1
-    for right<len(s){
-        c:=s[right]
-        right++
-        win[c]++
-        // 缩小窗口
-        for win[c]>1{
-            d:=s[left]
-            left++
-            win[d]--
-        }
-        // 计算结果
-        ans=max(right-left,ans)
-    }
-    return ans
-}
-func max(a,b int)int{
-    if a>b{
-        return a
-    }
-    return b
-}
+```python
+def lengthOfLongestSubstring(self, s: str) -> int:
+    res,left_i,right_i = 0,0,0
+    have = {}
+    while right_i<len(s):
+        have[s[right_i]]=have.get(s[right_i],0)+1
+        if have[s[right_i]]==1:
+            res = max(right_i-left_i+1,res)
+        else:
+            while left_i<=right_i and have[s[right_i]]>1:
+                have[s[left_i]]-=1
+                left_i+=1
+        right_i+=1
+    return res
 ```
 
 ## 总结
