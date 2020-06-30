@@ -2,20 +2,13 @@
 
 ## 背景
 
-回溯法（backtrack）常用于遍历列表所有子集，是 DFS 深度搜索一种，一般用于全排列，穷尽所有可能，遍历的过程实际上是一个决策树的遍历过程。时间复杂度一般 O(N!)，它不像动态规划存在重叠子问题可以优化，回溯算法就是纯暴力穷举，复杂度一般都很高。
+回溯法（backtrack）常用于遍历列表所有子集，是 DFS 深度搜索一种，一般用于全排列，穷尽所有可能，遍历的过程实际上是一个决策树的遍历过程。
+时间复杂度一般 O(N!)，它不像动态规划存在重叠子问题可以优化，回溯算法就是纯暴力穷举，复杂度一般都很高。
 
 ## 模板
 
-```go
-result = []
-func backtrack(选择列表,路径):
-    if 满足结束条件:
-        result.add(路径)
-        return
-    for 选择 in 选择列表:
-        做选择
-        backtrack(选择列表,路径)
-        撤销选择
+```python
+
 ```
 
 核心就是从选择列表里做一个选择，然后一直递归往下搜索答案，如果遇到路径不通，就返回来撤销这次选择。
@@ -30,74 +23,49 @@ func backtrack(选择列表,路径):
 
 ![image.png](https://img.fuiboom.com/img/backtrack.png)
 
-```go
-func subsets(nums []int) [][]int {
-	// 保存最终结果
-	result := make([][]int, 0)
-	// 保存中间结果
-	list := make([]int, 0)
-	backtrack(nums, 0, list, &result)
-	return result
-}
-
-// nums 给定的集合
-// pos 下次添加到集合中的元素位置索引
-// list 临时结果集合(每次需要复制保存)
-// result 最终结果
-func backtrack(nums []int, pos int, list []int, result *[][]int) {
-	// 把临时结果复制出来保存到最终结果
-	ans := make([]int, len(list))
-	copy(ans, list)
-	*result = append(*result, ans)
-	// 选择、处理结果、再撤销选择
-	for i := pos; i < len(nums); i++ {
-		list = append(list, nums[i])
-		backtrack(nums, i+1, list, result)
-		list = list[0 : len(list)-1]
-	}
-}
+```python
+class Solution:
+    def subsets(self, nums):
+        def back_track(first_idx=0,cur_subset=[]):
+            # 满足结束条件,增加路径
+            if len(cur_subset) == cur_length:
+                result.append(cur_subset[:])
+            # 在选择列表中做选择
+            for i in range(first_idx,len(nums)):
+                #做选择
+                cur_subset+=[nums[i]]
+                # 继续前进直至走不通或结束
+                back_track(i+1,cur_subset)
+                # 撤销选择
+                cur_subset.pop()
+        result  = []
+        for cur_length in range(len(nums)+1):
+            back_track()
+        return result
 ```
 
 ### [subsets-ii](https://leetcode-cn.com/problems/subsets-ii/)
 
 > 给定一个可能包含重复元素的整数数组 nums，返回该数组所有可能的子集（幂集）。说明：解集不能包含重复的子集。
 
-```go
-import (
-	"sort"
-)
-
-func subsetsWithDup(nums []int) [][]int {
-	// 保存最终结果
-	result := make([][]int, 0)
-	// 保存中间结果
-	list := make([]int, 0)
-	// 先排序
-	sort.Ints(nums)
-	backtrack(nums, 0, list, &result)
-	return result
-}
-
-// nums 给定的集合
-// pos 下次添加到集合中的元素位置索引
-// list 临时结果集合(每次需要复制保存)
-// result 最终结果
-func backtrack(nums []int, pos int, list []int, result *[][]int) {
-	// 把临时结果复制出来保存到最终结果
-	ans := make([]int, len(list))
-	copy(ans, list)
-	*result = append(*result, ans)
-	// 选择时需要剪枝、处理、撤销选择
-	for i := pos; i < len(nums); i++ {
-        // 排序之后，如果再遇到重复元素，则不选择此元素
-		if i != pos && nums[i] == nums[i-1] {
-			continue
-		}
-		list = append(list, nums[i])
-		backtrack(nums, i+1, list, result)
-		list = list[0 : len(list)-1]
-	}
-}
+```python
+def subsetsWithDup(self, nums):
+    def _back_track(first_idx=0,cur_set=[]):
+        if len(cur_set)==cur_length:
+            res.append(cur_set[:])
+        for next_idx in range(first_idx,len(nums)):
+            # 在同一位置上遇到重复元素，则跳过
+            if next_idx>first_idx and nums[next_idx-1]==nums[next_idx]:
+                continue
+            cur_set.append(nums[next_idx])
+            _back_track(next_idx+1,cur_set)
+            cur_set.pop()
+    #将数组按大小排序
+    nums.sort()
+    res = []
+    for cur_length in range(len(nums)+1):
+        _back_track()
+    return res
 ```
 
 ### [permutations](https://leetcode-cn.com/problems/permutations/)
@@ -106,91 +74,179 @@ func backtrack(nums []int, pos int, list []int, result *[][]int) {
 
 思路：需要记录已经选择过的元素，满足条件的结果才进行返回
 
-```go
-func permute(nums []int) [][]int {
-    result := make([][]int, 0)
-    list := make([]int, 0)
-    // 标记这个元素是否已经添加到结果集
-    visited := make([]bool, len(nums))
-    backtrack(nums, visited, list, &result)
-    return result
-}
-
-// nums 输入集合
-// visited 当前递归标记过的元素
-// list 临时结果集(路径)
-// result 最终结果
-func backtrack(nums []int, visited []bool, list []int, result *[][]int) {
-    // 返回条件：临时结果和输入集合长度一致 才是全排列
-    if len(list) == len(nums) {
-        ans := make([]int, len(list))
-        copy(ans, list)
-        *result = append(*result, ans)
-        return
-    }
-    for i := 0; i < len(nums); i++ {
-        // 已经添加过的元素，直接跳过
-        if visited[i] {
-            continue
-        }
-        // 添加元素
-        list = append(list, nums[i])
-        visited[i] = true
-        backtrack(nums, visited, list, result)
-        // 移除元素
-        visited[i] = false
-        list = list[0 : len(list)-1]
-    }
-}
+```python
+def permute(self, nums):
+    def _back_track(visited,cur_set):
+        # 返回条件:当前结果和输入集合长度一致
+        if len(cur_set)==len(nums):
+           res.append(cur_set[:])
+        for next_num in nums:
+            # 跳过已经添加过的元素
+            if next_num in visited:
+                continue
+            #选择
+            cur_set.append(next_num)
+            # visited标记加过的元素
+            _back_track(visited+[next_num],cur_set)
+            # 回溯
+            cur_set.pop()
+    res = []
+    _back_track([],[])
+    return res
 ```
 
 ### [permutations-ii](https://leetcode-cn.com/problems/permutations-ii/)
 
 > 给定一个可包含重复数字的序列，返回所有不重复的全排列。
 
-```go
-import (
-	"sort"
-)
-
-func permuteUnique(nums []int) [][]int {
-	result := make([][]int, 0)
-	list := make([]int, 0)
-	// 标记这个元素是否已经添加到结果集
-	visited := make([]bool, len(nums))
-	sort.Ints(nums)
-	backtrack(nums, visited, list, &result)
-	return result
-}
-
-// nums 输入集合
-// visited 当前递归标记过的元素
-// list 临时结果集
-// result 最终结果
-func backtrack(nums []int, visited []bool, list []int, result *[][]int) {
-	// 临时结果和输入集合长度一致 才是全排列
-	if len(list) == len(nums) {
-		subResult := make([]int, len(list))
-		copy(subResult, list)
-		*result = append(*result, subResult)
-	}
-	for i := 0; i < len(nums); i++ {
-		// 已经添加过的元素，直接跳过
-		if visited[i] {
-			continue
-		}
-        // 上一个元素和当前相同，并且没有访问过就跳过
-		if i != 0 && nums[i] == nums[i-1] && !visited[i-1] {
-			continue
-		}
-		list = append(list, nums[i])
-		visited[i] = true
-		backtrack(nums, visited, list, result)
-		visited[i] = false
-		list = list[0 : len(list)-1]
-	}
-}
+```python
+def permuteUnique(self, nums):
+    def _back_track(visited=[],cur_set=[]):
+        # 返回条件:当前结果和输入集合长度一致
+        if len(cur_set)==len(nums):
+            res.append(cur_set[:])
+        for next_idx in range(len(nums)):
+            # 跳过已经添加过的元素
+            if next_idx in visited:
+                continue
+            # 当前搜索和上一次搜索结果相同,且上次的结果会被再次访问(不在使用中)
+            if next_idx>0 and nums[next_idx]==nums[next_idx-1] and next_idx-1 not in visited:
+                continue
+            #选择
+            cur_set.append(nums[next_idx])
+            # visited标记加过的元素
+            _back_track(visited+[next_idx],cur_set)
+            # 回溯
+            cur_set.pop()
+    nums.sort()
+    res = []
+    _back_track([],[])
+    return res
 ```
+
+
+
+### [combination-sum](https://leetcode-cn.com/problems/combination-sum/)
+
+> 给定一个无重复元素的数组 candidates 和一个目标数 target ，找出 candidates 中所有可以使数字和为 target 的组合。
+> 关键:保证下一层索引不小于比上一层
+```python
+def combinationSum(self, candidates, target: int):
+    def _back_track(first_idx=0,cur_res=[],cur_target=0):
+        if cur_target==0:
+            res.append(cur_res[:])
+            return
+        for idx in range(first_idx,len(candidates)):
+            candi = candidates[idx]
+            #剪枝
+            if cur_target-candi<0:
+                break
+            # 保证下一层索引不小于比上一层
+            _back_track(idx,cur_res+[candi],cur_target-candi)
+    
+    candidates.sort()#为了剪枝,提速
+    res = []
+    _back_track(0,[],target)
+    return res
+```
+
+### [letter-combinations-of-a-phone-number](https://leetcode-cn.com/problems/letter-combinations-of-a-phone-number/)
+
+> 给定一个仅包含数字 2-9 的字符串，返回所有它能表示的字母组合。
+
+```python
+def letterCombinations(self, digits: str):
+    def _back_track(idx,prefix):
+        if idx==len(digits):
+            if len(prefix)>0:
+                res.append(prefix)
+            return
+        digit = list(digits)[idx]
+        S =digit2str_dict[int(digit)]
+        #在当前步穷尽所有可能
+        for s in S:
+            _back_track(idx+1,prefix+s)
+    #数字到字母的映射
+    k = [2,3,4,5,6,7,8,9]
+    v = ['abc','def','ghi','jkl','mno','pqrs','tuv','wxyz']
+    digit2str_dict = dict(zip(k,v))
+    # 
+    res = []
+    _back_track(0,'')
+    return res
+```
+
+### [palindrome-partitioning](https://leetcode-cn.com/problems/palindrome-partitioning/)
+
+> 分割回文串
+
+```python
+class Solution:
+    def partition_dp(self, s: str) :
+        # 动态规划找到所有回文串
+        dp = [[] for _ in range(len(s)+1)]#dp[i]表示s[i:]组成的所有回文串
+        dp[-1] = [[]]
+        for left_i in range(len(s)-1,-1,-1):
+            for right_i in range(left_i,len(s)):
+                if s[left_i:right_i+1] == s[left_i:right_i+1][::-1]:
+                    dp[left_i] += [[s[left_i:right_i+1]]+item for item in dp[right_i+1]]
+        return dp[0]
+
+
+    def partition_dp_dfs(self, s: str) :
+        # 动规+dfs
+        # step1.动态规划找到所有回文串
+        dp = [[False]*len(s) for _ in range(len(s))]
+        for l in range(len(s)):
+            for i in range(len(s)-l):
+                j = i+l
+                #动态转移方程
+                if s[i]==s[j] and (j-i<=2 or dp[i+1][j-1]):
+                    dp[i][j] = True
+        # print(dp)
+        # step2. dfs找到所有组合
+        res = []
+        def _dfs(left_idx,cur_res):
+            #left_idx:起始索引
+            if left_idx==len(s):
+                res.append(cur_res)
+            for right_idx in range(left_idx,len(s)):
+                if dp[left_idx][right_idx]:
+                    #dfs 继续向下搜索
+                    _dfs(right_idx+1,cur_res+[s[left_idx:right_idx+1]])
+        _dfs(0,[])
+        return res
+```
+
+### [restore-ip-addresses](https://leetcode-cn.com/problems/restore-ip-addresses/)
+
+> 复原IP地址
+
+```python
+def restoreIpAddresses(self, s: str):
+    def _back_track(cur_s=s,cur_res=[]):
+        if len(cur_res)==4:
+            if len(cur_s)==0:
+                # 增加结果
+                res.append('.'.join(cur_res))
+            return
+        #剪枝:剩下的字符无法构成ip地址
+        if len(cur_s) not in range(1*(4-len(cur_res)),3*(4-len(cur_res))+1):
+            return
+        for i in range(1,min(4,1+len(cur_s))):
+            # 剪枝:当前字符无法构成ip地址的一部分
+            if not cur_s[:i].isdigit() or int(cur_s[:i]) not in range(256):
+                break
+            if i>1 and cur_s[0]=='0':
+                break
+            #增加下一个
+            _back_track(cur_s[i:],cur_res+[cur_s[:i]])
+
+    res = []
+    _back_track()
+    return res
+```
+
 
 ## 练习
 
@@ -198,11 +254,7 @@ func backtrack(nums []int, visited []bool, list []int, result *[][]int) {
 - [ ] [subsets-ii](https://leetcode-cn.com/problems/subsets-ii/)
 - [ ] [permutations](https://leetcode-cn.com/problems/permutations/)
 - [ ] [permutations-ii](https://leetcode-cn.com/problems/permutations-ii/)
-
-挑战题目
-
 - [ ] [combination-sum](https://leetcode-cn.com/problems/combination-sum/)
 - [ ] [letter-combinations-of-a-phone-number](https://leetcode-cn.com/problems/letter-combinations-of-a-phone-number/)
 - [ ] [palindrome-partitioning](https://leetcode-cn.com/problems/palindrome-partitioning/)
 - [ ] [restore-ip-addresses](https://leetcode-cn.com/problems/restore-ip-addresses/)
-- [ ] [permutations](https://leetcode-cn.com/problems/permutations/)
