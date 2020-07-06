@@ -1,5 +1,71 @@
 # 排序
 
+## leetcode题目
+
+[find-duplicate-subtrees](https://leetcode-cn.com/problems/find-duplicate-subtrees/)
+> 
+思路：
+```python
+```
+
+
+
+[kth-smallest-element-in-a-sorted-matrix](https://leetcode-cn.com/problems/kth-smallest-element-in-a-sorted-matrix/)
+> 有序矩阵中第K小的元素
+
+> 思路：归并排序n个数组到第k位 or 值域的二分查找
+
+```python
+class Solution:
+    def kthSmallest(self, matrix, k: int) -> int:
+        # ------------------------------
+        # #方法一:二维转一维并排序
+        # return sorted(sum(matrix,[]))[k-1]
+        # ------------------------------
+        #方法二:归并n个有序数组,直到第k个元素
+        # n = len(matrix)
+        # import heapq
+        # #构建小根堆
+        # prio_heap = []
+        # for i in range(n):
+        #     heapq.heappush(prio_heap,[matrix[i][0],i,0])
+        # #
+        # for i in range(k-1):
+        #     v,r,c = heapq.heappop(prio_heap)
+        #     if c!=n-1:
+        #         heapq.heappush(prio_heap,[matrix[r][c+1],r,c+1])   
+        # return heapq.heappop(prio_heap)[0]
+        # ------------------------------
+        #方法三:对数值进行二分查找
+        def check(mid):
+            #计算矩阵中比mid小的元素的个数
+            i,j = n-1,0
+            num = 0
+            #逐列找小于mid的行
+            while i>=0 and j<n:
+                if matrix[i][j]<=mid:
+                    #该列上面的行，值一定小于等于mid
+                    num+=(i+1)
+                    j+=1
+                else:
+                    i-=1
+            return num>=k
+        n = len(matrix)
+        left,right = matrix[0][0],matrix[-1][-1]
+        while left<right:
+            mid = (left+right)//2
+            if check(mid):
+                right = mid
+            else:
+                left = mid+1
+        return left
+            
+```
+
+
+
+
+
 ## 常考排序
 
 ### 快速排序

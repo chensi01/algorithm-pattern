@@ -528,6 +528,107 @@ def minDistance(self, word1: str, word2: str) -> int:
 
 > 另外一种做法：MAXLEN(a,b)-LCS(a,b)
 
+
+
+
+
+
+
+
+
+
+
+
+
+### [maximum-length-of-repeated-subarray](https://leetcode-cn.com/problems/maximum-length-of-repeated-subarray/)
+
+>  最长重复子数组
+```python
+class Solution:
+    # 思路:容易想到暴力解法,即枚举AB的起始位置计算最长公共前缀,最终答案即为所有的最长公共前缀的最大值.
+    # 时间复杂度为O(n^3).造成复杂度高的根本原因是每个A[i]与B[j]的值需要比较多次
+    def findLength_3(self, A, B) -> int:
+        # 方法三:二分查找+哈希
+        # 使用 Rabin-Karp 算法来对序列进行哈希.制定base为大于序列长度的素数
+        # 在二分查找的每一步,用哈希表分别存储这两个数组所有长度为len的子数组的哈希值,并进行比对
+        base,mod = 113,10**9+9
+
+        def _findSubarray(array,length):
+            hash_a = 0
+            for i in range(length):
+                hash_a = (hash_a*base+array[i]) % mod
+            hash_set = {hash_a}
+            mult = (base**(length-1)) % mod
+            for i in range(length, len(array)):
+                hash_a = ((hash_a-array[i-length]*mult)*base+array[i]) % mod
+                hash_set.add(hash_a)
+            return hash_set
+
+        def _check(length):
+            #A/B长度为length的子数组的哈希值
+            hash_A_set = _findSubarray(A,length)
+            hash_B_set = _findSubarray(B,length)
+            return len(hash_A_set&hash_B_set)>0
+        #对length的值做二分查找
+        left,right = 0,min(len(A),len(B))
+        res = 0
+        while left<=right:
+            mid = (left+right)//2
+            if _check(mid):
+                res = max(res,mid)
+                left = mid+1
+            else:
+                right = mid-1
+        return res
+
+
+    def findLength_1(self, A, B) -> int:
+        # 方法一:使用动态规划,只对A[i]与B[j]比较一次,存储利用比较结果
+        # 时间/空间复杂度为O(M*N)
+        la,lb = len(A),len(B)
+        # 动态规划dp[i][j]表示A[i:]和B[j:]的最长公共前缀
+        dp = [[0]*(la+1) for _ in range(lb+1)]
+        ans = 0
+        for i in range(la-1,-1,-1):
+            for j in range(lb-1,-1,-1):
+                if A[i]==B[j]:
+                    # dp[i][j] 的值从 dp[i + 1][j + 1] 转移得到
+                    dp[i][j] = dp[i+1][j+1]+1
+                ans = max(ans,dp[i][j])
+        return ans
+    def findLength_2(self, A, B) -> int:
+        # 方法二:滑动窗口.两位置会比较多次是因为重复子数组在两个数组中的位置可能不同.
+        # 枚举 A 和 B 所有的对齐方式,计算相对位置相同的重复子数组
+        # 空间复杂度O(1),时间复杂度O((M+N)*min(M,N))
+        la,lb = len(A),len(B)
+        res = 0
+        def _max_length(start_i_a,start_i_b):
+            cur_res,k = 0,0
+            while start_i_a<la and start_i_b<lb:
+                if A[start_i_a]==B[start_i_b]:
+                    k+=1
+                    cur_res = max(cur_res,k)
+                else:
+                    k = 0
+                start_i_a,start_i_b = start_i_a+1,start_i_b+1
+            return cur_res
+        #A不变,滑动B的对齐A的每个位置
+        for start_i_a in range(la):
+            res = max(res,_max_length(start_i_a,0))
+        
+        #B不变,滑动A的对齐B的每个位置
+        for start_i_b in range(lb):
+            res = max(res,_max_length(0,start_i_b))
+        return res
+            
+
+```
+
+
+
+
+
+
 ## 零钱和背包（10%）
 
 ### [coin-change](https://leetcode-cn.com/problems/coin-change/)

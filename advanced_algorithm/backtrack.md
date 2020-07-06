@@ -221,30 +221,60 @@ class Solution:
 ### [restore-ip-addresses](https://leetcode-cn.com/problems/restore-ip-addresses/)
 
 > 复原IP地址
+>这个问题最朴素的解法是暴力法：遍历点可能的所有位置并判断合法性。需要11×10×9=990 次检查。
+可以通过约束规划+回溯来减少检查次数，优化时间复杂度。
+约束规划：对每个点的放置设置限制。每个点的放置位置只有 3 种可能：上个点的1/2/3个数字之后。只需要检测3×3×3=27种情况。
+回溯：当已经放置的点使得无法摆放其他点来生成有效IP地址时，回到之前，改变上一个摆放点的位置。并试着继续。
+要实现这个方法，我们需要一个地址栈来保存临时结果。
+需要一个回溯函数，以（1）上一个点的位置（2）待放置点的数量（3）当前地址栈 为参数。再把回溯翻译成代码逻辑：如果还有需要放置的点，我们遍历三个有效位置，并判断两个位置之间的部分是否是有效整数，是则（1）将结果压入地址栈，递归调用函数，继续放下一个点；（2）递归返回后，移除栈顶元素，进行回溯。
+当点放置完，检查剩余部分是否是有效整数，是则将结果添加到输出列表。
 
 ```python
-def restoreIpAddresses(self, s: str):
-    def _back_track(cur_s=s,cur_res=[]):
-        if len(cur_res)==4:
-            if len(cur_s)==0:
-                # 增加结果
-                res.append('.'.join(cur_res))
-            return
-        #剪枝:剩下的字符无法构成ip地址
-        if len(cur_s) not in range(1*(4-len(cur_res)),3*(4-len(cur_res))+1):
-            return
-        for i in range(1,min(4,1+len(cur_s))):
-            # 剪枝:当前字符无法构成ip地址的一部分
-            if not cur_s[:i].isdigit() or int(cur_s[:i]) not in range(256):
-                break
-            if i>1 and cur_s[0]=='0':
-                break
-            #增加下一个
-            _back_track(cur_s[i:],cur_res+[cur_s[:i]])
+class Solution:
+    def restoreIpAddresses(self, s: str):
+        def backtrack(prev_pos = -1, dots = 3,cur_res = []):
+            if dots==0:
+                cur_seg = s[prev_pos+1:]
+                if int(cur_seg) not in range(256) or (len(cur_seg)>1 and cur_seg[0]=='0'):
+                    return
+                res.append('.'.join(cur_res+[cur_seg]))
+            else:
+                # 每个点的放置位置只有 3 种可能
+                for cur_pos in range(prev_pos+1,min(prev_pos+4,len(s))):
+                    cur_seg = s[prev_pos+1:cur_pos+1]
+                    # 不在0-255或有多余的前缀0
+                    if int(cur_seg) not in range(256) or (len(cur_seg)>1 and cur_seg[0]=='0'):
+                        continue
+                    cur_res+=[cur_seg]
+                    backtrack(cur_pos,dots-1,cur_res)
+                    cur_res.pop()
+        n = len(s)
+        res = []
+        backtrack()
+        return res
+                
+    def restoreIpAddresses_(self, s: str):
+        def _back_track(cur_s=s,cur_res=[]):
+            if len(cur_res)==4:
+                if len(cur_s)==0:
+                    # 增加结果
+                    res.append('.'.join(cur_res))
+                return
+            #剪枝:剩下的字符无法构成ip地址
+            if len(cur_s) not in range(1*(4-len(cur_res)),3*(4-len(cur_res))+1):
+                return
+            for i in range(1,min(4,1+len(cur_s))):
+                # 剪枝:当前字符无法构成ip地址的一部分
+                if not cur_s[:i].isdigit() or int(cur_s[:i]) not in range(256):
+                    break
+                if i>1 and cur_s[0]=='0':
+                    break
+                #增加下一个
+                _back_track(cur_s[i:],cur_res+[cur_s[:i]])
 
-    res = []
-    _back_track()
-    return res
+        res = []
+        _back_track()
+        return res
 ```
 
 

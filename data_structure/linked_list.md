@@ -167,23 +167,117 @@ def mergeTwoLists_recursive(self, l1: ListNode, l2: ListNode) -> ListNode:
     return head
     
 def mergeTwoLists_iter(self, l1: ListNode, l2: ListNode) -> ListNode:
+    # 原地调整链表元素的 next 指针完成合并-->空间代价O(1)
+    # 处理合并之后链表的头部:为方便代码书写,设置虚拟的哑结点指向头结点(val属性不保存任何值).合并完后返回它的下一位置
     dummy = ListNode(-1)
-    l = dummy
-    while l1 and l2:
-        if l1.val<l2.val:
-            l.next = l1
-            l1 = l1.next
+    # 需要一个指针 tail 来记录下一个插入位置的前一个位置
+    tail  = dummy
+    # 需要两个指针p和q来记录未合并部分的第一位
+    p,q = l1,l2
+    #
+    while p and q:
+        # 都不为空的时候，取val较小的合并
+        if p.val<q.val:
+            # 合并时先调整tail的next属性,再将tail和p(q)后移动
+            tail.next = p
+            tail,p = tail.next,p.next
         else:
-            l.next = l2
-            l2 = l2.next
-        l = l.next
-    # 将链表末尾指向未合并完的链表
-    if l1:
-        l.next = l1
-    if l2:
-        l.next = l2
+            tail.next = q
+            tail,q = tail.next,q.next
+    #一个链表已经合并完毕,则把另一个链表后面的元素全部合并
+    if p:
+        tail.next = p
+    else:
+        tail.next = q
+    #
     return dummy.next
 ```
+
+
+
+
+
+### [merge-k-sorted-lists](https://leetcode-cn.com/problems/merge-k-sorted-lists/)
+
+> 合并 k 个排序链表，返回合并后的排序链表。分析和描述算法的复杂度。
+
+```python
+# Definition for singly-linked list.
+class ListNode:
+    def __init__(self, x):
+        self.val = x
+        self.next = None
+
+class Solution:
+    def mergeTwoLists_iter(self, l1: ListNode, l2: ListNode) -> ListNode:
+        dummy = ListNode(-1)
+        tail = dummy
+        while l1 and l2:
+            if l1.val<l2.val:
+                tail.next = l1
+                l1 = l1.next
+            else:
+                tail.next = l2
+                l2 = l2.next
+            tail = tail.next
+        if l1:
+            tail.next = l1
+        else:
+            tail.next = l2
+        return dummy.next
+    def mergeKLists(self, lists: List[ListNode]) -> ListNode:
+        # 空间代价O(1):原地调整链表元素的next指针
+        # 简化版K=2->
+        # --------------------------------
+        # (1)逐一合并两条链表, 时间复杂度：O(NK^2)
+        # res = None
+        # for l in lists:
+        #     res = self.mergeTwoLists_iter(res,l)
+        # return res
+        # --------------------------------
+        # (2)使用分治法的思想,两两合并, 时间复杂度O(NKlogK)从K条链表开始两两合并成1条链表，因此每条链表都会被合并logK次,K条链表K*logK次.
+        # def _mergeKLists(lists,l,r):
+        #     if l==r:
+        #         return lists[l]
+        #     #divide
+        #     mid = (l+r)//2
+        #     left = _mergeKLists(lists,l,mid)
+        #     right = _mergeKLists(lists,mid+1,r)
+        #     #conquer
+        #     return self.mergeTwoLists_iter(left,right)
+        # if len(lists)==0:
+        #     return []
+        # return _mergeKLists(lists,0,len(lists)-1)
+        # --------------------------------
+        # (3)使用优先队列,每次比较k个元素
+        # 时间复杂度：O(kn*logk) 堆插入和删除的时间代价为 O(logk),最多有kn个点
+        # 空间复杂度：O(k)堆的元素不超过k个
+        dummy = ListNode(-1)
+        tail = dummy
+        # 构建优先队列/最小堆
+        import heapq
+        prio_heap = []
+        for i in range(len(lists)):
+            if lists[i]:
+                heapq.heappush(prio_heap,(lists[i].val,i))
+        while prio_heap:
+            #取堆顶元素
+            _,idx = heappop(prio_heap)
+            # 修改指针
+            tail.next = lists[idx]
+            tail = tail.next
+            if lists[idx].next :
+                lists[idx] = lists[idx].next
+                heapq.heappush(prio_heap,(lists[idx].val,idx))
+        return dummy.next
+```
+
+
+
+
+
+
+
 
 ### [partition-list](https://leetcode-cn.com/problems/partition-list/)
 
